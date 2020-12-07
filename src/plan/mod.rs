@@ -14,6 +14,11 @@ pub use self::mutator_context::MutatorContext;
 pub use self::tracelocal::TraceLocal;
 pub use self::transitive_closure::TransitiveClosure;
 
+#[cfg(feature = "mygc")]
+pub mod mygc;
+#[cfg(feature = "mygc")]
+pub use self::mygc as selected_plan;
+
 #[cfg(feature = "nogc")]
 pub mod nogc;
 #[cfg(feature = "nogc")]

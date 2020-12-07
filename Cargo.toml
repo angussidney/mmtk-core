@@ -42,6 +42,7 @@ rand = "0.7.3"
 default = []
 
 # plans
+mygc = ["immortalspace", "largeobjectspace"]
 nogc = ["immortalspace", "largeobjectspace"]
 semispace = ["immortalspace", "largeobjectspace", "copyspace"]
 gencopy = ["immortalspace", "largeobjectspace", "copyspace"]
