@@ -7,6 +7,19 @@
 MMTk is a framework for the design and implementation of memory managers.
 This repository hosts the Rust port of MMTk.
 
+---
+
+# Note
+
+This is a fork of the main MMTk project, with a purely educational GC `MyGC` which I used to familiarise myself with the project. It is heavily commented (although whether these comments are accurate is yet to be seen).
+
+Here are the list of commits which represent each type of GC as I built it up:
+ - NoGC: [eec34b](https://github.com/angussidney/mmtk-core/commit/eec34be11fc75c638f269f88728bc9575c6b0fdf)
+
+In order to test these changes, I used `mmtk-openjdk` with the changes described in `./tmp.txt`.
+
+---
+
 ## Contents
 
 * [Requirements](#requirements)

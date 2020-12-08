@@ -1,0 +1,89 @@
+diff --git a/mmtk/Cargo.toml b/mmtk/Cargo.toml
+index cf9a225..f14c45c 100644
+--- a/mmtk/Cargo.toml
++++ b/mmtk/Cargo.toml
+@@ -21,12 +21,13 @@ lazy_static = "1.1"
+ # - change branch
+ # - change repo name
+ # But other changes including adding/removing whitespaces in commented lines may break the CI.
+-mmtk = { git = "ssh://git@github.com/mmtk/mmtk-core.git", rev = "966047a1d65e5143b1331f4e2644a1712538c790" }
++# mmtk = { git = "ssh://git@github.com/mmtk/mmtk-core.git", rev = "966047a1d65e5143b1331f4e2644a1712538c790" }
+ # Uncomment the following to build locally
+-# mmtk = { path = "../repos/mmtk-core" }
++mmtk = { path = "../repos/mmtk-core" }
+ 
+ [features]
+ default = []
++mygc = ["mmtk/mygc"]
+ nogc = ["mmtk/nogc"]
+ nogc_lock_free = ["mmtk/nogc_lock_free"]
+ nogc_no_zeroing = ["mmtk/nogc_no_zeroing"]
+diff --git a/mmtk/src/api.rs b/mmtk/src/api.rs
+index 0aa8141..c3f4127 100644
+--- a/mmtk/src/api.rs
++++ b/mmtk/src/api.rs
+@@ -87,7 +87,7 @@ pub extern "C" fn alloc_slow_bump_monotone_immortal(
+ // FIXME: after we remove plan as build-time option, we should remove this conditional compilation as well.
+ 
+ #[no_mangle]
+-#[cfg(any(feature = "semispace", feature = "gencopy"))]
++#[cfg(any(feature = "semispace", feature = "gencopy", feature="mygc"))]
+ pub extern "C" fn alloc_slow_bump_monotone_copy(
+     allocator: *mut c_void,
+     size: usize,
+@@ -98,7 +98,7 @@ pub extern "C" fn alloc_slow_bump_monotone_copy(
+     unsafe { &mut *(allocator as *mut BumpAllocator<OpenJDK>) }.alloc_slow(size, align, offset)
+ }
+ #[no_mangle]
+-#[cfg(not(any(feature = "semispace", feature = "gencopy")))]
++#[cfg(not(any(feature = "semispace", feature = "gencopy", feature="mygc")))]
+ pub extern "C" fn alloc_slow_bump_monotone_copy(
+     allocator: *mut c_void,
+     size: usize,
+diff --git a/openjdk/CompileThirdPartyHeap.gmk b/openjdk/CompileThirdPartyHeap.gmk
+index 62a1426..73b9176 100644
+--- a/openjdk/CompileThirdPartyHeap.gmk
++++ b/openjdk/CompileThirdPartyHeap.gmk
+@@ -38,6 +38,8 @@ JVM_CFLAGS += -DINCLUDE_THIRD_PARTY_HEAP -DTHIRD_PARTY_HEAP_SRC=$(MMTK_CPP_ROOT)
+ 
+ ifeq ($(GC), nogc)
+   JVM_CFLAGS += -DMMTK_GC_NOGC=1
++else ifeq ($(GC), mygc)
++  JVM_CFLAGS += -DMMTK_GC_MYGC=1
+ else ifeq ($(GC), semispace)
+   JVM_CFLAGS += -DMMTK_GC_SEMISPACE=1
+ else
+diff --git a/openjdk/mmtk.h b/openjdk/mmtk.h
+index ac79652..3d18abe 100644
+--- a/openjdk/mmtk.h
++++ b/openjdk/mmtk.h
+@@ -13,6 +13,10 @@ extern "C" {
+ #define MMTK_GC_NOGC 0
+ #endif
+ 
++#ifndef MMTK_GC_MYGC
++#define MMTK_GC_MYGC 0
++#endif
++
+ #ifndef MMTK_GC_SEMISPACE
+ #define MMTK_GC_SEMISPACE 0
+ #endif
+diff --git a/openjdk/mmtkMutator.cpp b/openjdk/mmtkMutator.cpp
+index 591f05e..4a4b340 100644
+--- a/openjdk/mmtkMutator.cpp
++++ b/openjdk/mmtkMutator.cpp
+@@ -8,7 +8,7 @@ MMTkMutatorContext MMTkMutatorContext::bind(::Thread* current) {
+ 
+ HeapWord* MMTkMutatorContext::alloc(size_t bytes, Allocator allocator) {
+     // FIXME: Proper use of slow-path api
+-#if MMTK_GC_NOGC
++#if MMTK_GC_NOGC || MMTK_GC_MYGC
+     HeapWord* o = (HeapWord*) ::alloc((MMTk_Mutator) this, bytes, HeapWordSize, 0, allocator);
+     // post_alloc((MMTk_Mutator) this, o, NULL, bytes, a);
+     return o;
+diff --git a/repos/openjdk b/repos/openjdk
+--- a/repos/openjdk
++++ b/repos/openjdk
+@@ -1 +1 @@
+-Subproject commit 822ba801f0ae756a2f213b44e06295eefb0c672d
++Subproject commit 822ba801f0ae756a2f213b44e06295eefb0c672d-dirty
