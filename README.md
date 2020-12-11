@@ -15,6 +15,7 @@ This is a fork of the main MMTk project, with a purely educational GC `MyGC` whi
 
 Here are the list of commits which represent each type of GC as I built it up:
  - NoGC: [eec34b](https://github.com/angussidney/mmtk-core/commit/eec34be11fc75c638f269f88728bc9575c6b0fdf)
+ - SemiSpace: [22410a](https://github.com/angussidney/mmtk-core/commit/22410a73dfe5001b2f149954dc9ad2f0e75050af)
 
 In order to test these changes, I used `mmtk-openjdk` with the changes described in `./tmp.txt`.
 
